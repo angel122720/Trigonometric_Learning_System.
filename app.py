@@ -1,157 +1,86 @@
 import streamlit as st
 import math
 import numpy as np
-import matplotlib.pyplot as plt
-import sympy as sp
 
-# ------------------ CONFIG ------------------
-st.set_page_config(page_title="Trig Learning Lab", layout="wide")
+st.set_page_config(page_title="Trig Learning App", layout="wide")
 
-# ------------------ MODERN UI ------------------
-st.markdown("""
-<style>
-body {
-    background: linear-gradient(135deg, #1e1e2f, #2b5876);
-    color: white;
-}
-.stButton>button {
-    background-color: #4CAF50;
-    color: white;
-    border-radius: 10px;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ------------------ SESSION STATE ------------------
+# ---------------- SESSION STATE ----------------
 if "score" not in st.session_state:
     st.session_state.score = 0
-if "attempts" not in st.session_state:
-    st.session_state.attempts = 0
 
-# ------------------ TITLE ------------------
-st.title("🎯 Trigonometry Learning Lab")
-st.caption("Interactive • Discovery-Based • ADDIE Model")
+# ---------------- TITLE ----------------
+st.title("🎯 Trigonometry Interactive Learning App")
+st.caption("Discovery Learning + ADDIE Model")
 
-# ------------------ ANALYSIS ------------------
-st.sidebar.header("📊 Analysis Phase")
-level = st.sidebar.selectbox("Select your level:", ["Beginner", "Intermediate", "Advanced"])
-
+# ---------------- SIDEBAR ----------------
 menu = st.sidebar.radio(
-    "📌 Menu",
-    ["🏠 Home", "📐 Explore", "📘 Identities", "📈 Derivatives", "🧮 Calculator", "🧩 Equation Solver", "🧠 Quiz", "📊 Progress"]
+    "Menu",
+    ["Home", "Calculator", "Identities", "Derivatives", "Quiz"]
 )
 
-# ------------------ HOME ------------------
-if menu == "🏠 Home":
-    st.header("Welcome!")
-    st.write(f"Level: {level}")
-    st.info("Explore, compute, and learn trigonometry interactively!")
+# ---------------- HOME ----------------
+if menu == "Home":
+    st.header("Welcome 👋")
+    st.write("Explore trigonometry in a simple and interactive way!")
 
-# ------------------ EXPLORE ------------------
-elif menu == "📐 Explore":
-    angle = st.slider("Angle (degrees)", 0, 360, 30)
+# ---------------- CALCULATOR ----------------
+elif menu == "Calculator":
+    st.header("🧮 Calculator (Degrees)")
+
+    angle = st.number_input("Enter angle in degrees:", value=30.0)
     rad = math.radians(angle)
 
-    st.metric("sin(x)", round(math.sin(rad), 4))
-    st.metric("cos(x)", round(math.cos(rad), 4))
-    st.metric("tan(x)", round(math.tan(rad), 4))
+    if st.button("Compute"):
+        st.success(f"sin({angle}) = {round(math.sin(rad),4)}")
+        st.success(f"cos({angle}) = {round(math.cos(rad),4)}")
+        st.success(f"tan({angle}) = {round(math.tan(rad),4)}")
 
-    x = np.linspace(0, 2*np.pi, 100)
-    y = np.sin(x)
+# ---------------- IDENTITIES ----------------
+elif menu == "Identities":
+    st.header("📘 Identity Checker")
 
-    fig, ax = plt.subplots()
-    ax.plot(x, y)
-    st.pyplot(fig)
-
-# ------------------ IDENTITIES ------------------
-elif menu == "📘 Identities":
-    angle = st.slider("Angle", 0, 360, 45)
+    angle = st.slider("Select angle", 0, 360, 45)
     rad = math.radians(angle)
 
     result = math.sin(rad)**2 + math.cos(rad)**2
 
-    st.latex(r"\sin^2(x) + \cos^2(x)")
-    st.write("Result:", round(result, 4))
+    st.write("sin²(x) + cos²(x) = ", round(result, 4))
 
     if abs(result - 1) < 0.001:
-        st.success("Verified!")
+        st.success("✔ Identity is TRUE (≈ 1)")
     else:
         st.error("Try again")
 
-# ------------------ DERIVATIVES ------------------
-elif menu == "📈 Derivatives":
-    func = st.selectbox("Function", ["sin(x)", "cos(x)", "tan(x)"])
+# ---------------- DERIVATIVES ----------------
+elif menu == "Derivatives":
+    st.header("📈 Derivatives")
 
-    derivatives = {
-        "sin(x)": r"\cos(x)",
-        "cos(x)": r"-\sin(x)",
-        "tan(x)": r"\sec^2(x)"
-    }
+    func = st.selectbox("Choose function", ["sin(x)", "cos(x)", "tan(x)"])
 
-    st.latex(r"\frac{d}{dx} " + func + " = " + derivatives[func])
+    if func == "sin(x)":
+        st.latex(r"\frac{d}{dx} \sin(x) = \cos(x)")
+    elif func == "cos(x)":
+        st.latex(r"\frac{d}{dx} \cos(x) = -\sin(x)")
+    elif func == "tan(x)":
+        st.latex(r"\frac{d}{dx} \tan(x) = \sec^2(x)")
 
-# ------------------ CALCULATOR ------------------
-elif menu == "🧮 Calculator":
-    mode = st.selectbox("Mode", ["Evaluate", "Simplify", "Derivative"])
+# ---------------- QUIZ (WITH BALLOONS 🎈) ----------------
+elif menu == "Quiz":
+    st.header("🧠 Quick Quiz")
 
-    x = sp.symbols('x')
+    st.write("What is the derivative of sin(x)?")
 
-    expr = st.text_input("Enter expression:")
+    answer = st.radio("", ["cos(x)", "-sin(x)", "tan(x)"])
 
-    if st.button("Run"):
-        try:
-            if mode == "Evaluate":
-                expr_eval = expr.replace("sin", "math.sin").replace("cos", "math.cos").replace("tan", "math.tan")
-                result = eval(expr_eval.replace("(", "(math.radians("))
-                st.success(result)
-
-            elif mode == "Simplify":
-                st.success(sp.simplify(expr))
-
-            elif mode == "Derivative":
-                st.success(sp.diff(expr, x))
-        except:
-            st.error("Invalid input")
-
-# ------------------ EQUATION SOLVER ------------------
-elif menu == "🧩 Equation Solver":
-    st.header("Solve Trig Equation")
-
-    eq = st.text_input("Example: sin(x) - 0.5")
-
-    if st.button("Solve"):
-        try:
-            x = sp.symbols('x')
-            solution = sp.solve(eq, x)
-            st.success(f"Solutions: {solution}")
-        except:
-            st.error("Invalid equation")
-
-# ------------------ QUIZ ------------------
-elif menu == "🧠 Quiz":
-    st.session_state.attempts += 1
-
-    ans = st.radio("Derivative of sin(x)?", ["cos(x)", "-sin(x)", "sec^2(x)"])
-
-    if st.button("Submit"):
-        if ans == "cos(x)":
-            st.success("Correct!")
+    if st.button("Submit Answer"):
+        if answer == "cos(x)":
             st.session_state.score += 1
-        else:
-            st.error("Wrong!")
+            st.success("Correct! 🎉 Great job!")
 
-# ------------------ PROGRESS ------------------
-elif menu == "📊 Progress":
-    st.header("Your Progress")
+            # 🎈 BALLOON EFFECT
+            st.balloons()
+
+        else:
+            st.error("Wrong answer. Try again!")
 
     st.write("Score:", st.session_state.score)
-    st.write("Attempts:", st.session_state.attempts)
-
-    if st.session_state.attempts > 0:
-        percent = (st.session_state.score / st.session_state.attempts) * 100
-        st.progress(percent / 100)
-        st.write(f"Accuracy: {round(percent,2)}%")
-
-# ------------------ FOOTER ------------------
-st.markdown("---")
-st.caption("ADDIE Model Integrated Learning System")
